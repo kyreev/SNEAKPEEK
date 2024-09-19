@@ -1,25 +1,24 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
 import generateToken from "../config/jwtToken.js";
+import mongoose from "mongoose";
 
 // Create a new user
 export const createUser = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  // Check if user already exists
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return res.status(400).json({
       success: false,
-      message: "User already exists",
+      message: "User already exists.",
     });
   }
 
-  // Create new user
   const newUser = await User.create(req.body);
   res.status(201).json({
     success: true,
-    message: "User created successfully",
+    message: "User created successfully.",
     user: {
       _id: newUser._id,
       firstname: newUser.firstname,
@@ -35,19 +34,17 @@ export const createUser = asyncHandler(async (req, res) => {
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Find user by email
   const user = await User.findOne({ email });
   if (!user || !(await user.isPasswordMatched(password))) {
     return res.status(401).json({
       success: false,
-      message: "Invalid credentials",
+      message: "Invalid email or password.",
     });
   }
 
-  // Successful login response with token
   res.status(200).json({
     success: true,
-    message: "Login successful",
+    message: "Login successful.",
     user: {
       _id: user._id,
       firstname: user.firstname,
@@ -64,10 +61,10 @@ export const loginUser = asyncHandler(async (req, res) => {
 export const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find();
 
-  if (!users || users.length === 0) {
+  if (users.length === 0) {
     return res.status(404).json({
       success: false,
-      message: "No users found",
+      message: "No users found.",
     });
   }
 
@@ -79,12 +76,21 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 
 // Get a user by ID
 export const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID.",
+    });
+  }
+
+  const user = await User.findById(id);
 
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "User not found",
+      message: "User not found.",
     });
   }
 
@@ -101,15 +107,69 @@ export const getUserById = asyncHandler(async (req, res) => {
   });
 });
 
+// Update a user by ID
+export const updateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID.",
+    });
+  }
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found.",
+    });
+  }
+
+  user.firstname = req.body.firstname || user.firstname;
+  user.lastname = req.body.lastname || user.lastname;
+  user.email = req.body.email || user.email;
+  user.mobile = req.body.mobile || user.mobile;
+  user.role = req.body.role || user.role;
+
+  const updatedUser = await user.save();
+  res.status(200).json({
+    success: true,
+    message: "User updated successfully.",
+    user: {
+      _id: updatedUser._id,
+      firstname: updatedUser.firstname,
+      lastname: updatedUser.lastname,
+      email: updatedUser.email,
+      mobile: updatedUser.mobile,
+      role: updatedUser.role,
+    },
+  });
+});
+
 // Delete a user by ID
 export const deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid user ID.",
+    });
+  }
+
   const user = await User.findById(id);
   if (!user) {
-    return res.status(404).json({ success: false, message: "User not found" });
+    return res.status(404).json({
+      success: false,
+      message: "User not found.",
+    });
   }
 
   await User.findByIdAndDelete(id);
-  res.status(200).json({ success: true, message: "User deleted successfully" });
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully.",
+  });
 });
