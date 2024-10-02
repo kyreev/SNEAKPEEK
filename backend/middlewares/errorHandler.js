@@ -5,7 +5,7 @@ export const notFound = (req, res, next) => {
     success: false,
     message: error.message,
   });
-  next(error);
+  next();
 };
 
 // Middleware to handle application errors
@@ -17,6 +17,6 @@ export const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json({
     success: false,
     message: err.message,
-    stack: process.env.NODE_ENV === "development" ? err.stack : null, // Only show stack trace in development
+    stack: process.env.NODE_ENV === "development" ? err.stack : null,
   });
 };
