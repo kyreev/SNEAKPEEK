@@ -7,6 +7,7 @@ import {
   deleteUser,
   updateUser,
 } from "../controllers/userController.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ const router = express.Router();
 router.post("/register", createUser);
 router.post("/login", loginUser);
 router.get("/", getAllUsers);
-router.get("/:id", getUserById);
+router.get("/:id", authMiddleware, getUserById);
 router.delete("/:id", deleteUser);
 router.put("/:id", updateUser);
 
