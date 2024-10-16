@@ -36,7 +36,8 @@ const userSchema = new Schema(
       default: "User",
     },
     cart: {
-      type: Array,
+      type: [ObjectId],
+      ref: "Product",
       default: [],
     },
     address: [
@@ -51,12 +52,17 @@ const userSchema = new Schema(
         ref: "Product",
       },
     ],
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
 // Pre-save middleware to hash password before saving
 userSchema.pre("save", async function (next) {
+  // Only hash the password if it has been modified (or is new)
   if (!this.isModified("password")) {
     return next();
   }
